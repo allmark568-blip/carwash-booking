@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Car Wash Booking</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+body{font-family:Arial;background:#f4f4f4;margin:0;padding:20px}
+.container{max-width:900px;margin:auto;background:white;padding:25px;border-radius:10px;box-shadow:0 5px 20px rgba(0,0,0,0.1)}
+h1{text-align:center}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-top:20px}
+.slot{padding:10px;border-radius:6px;border:1px solid #ddd;background:#fafafa;cursor:pointer;text-align:center}
+.slot.booked{background:#ffdddd;border-color:#ff8a8a;cursor:not-allowed}
+.slot.selected{background:#000;color:white}
+select,input,button{width:100%;padding:10px;margin-top:10px;font-size:15px}
+button{background:black;color:white;border:none;cursor:pointer;margin-top:15px}
+.price{font-size:20px;font-weight:bold;text-align:center;margin-top:10px}
+</style>
+</head>
+
+<body>
+<div class="container">
+<h1>Car Wash Booking</h1>
+
+<label>Name</label>
+<input id="name" type="text" placeholder="Customer name">
+
+<label>Email</label>
+<input id="email" type="email" placeholder="Customer email">
+
+<label>Car Size</label>
+<select id="carSize" onchange="updatePrice()">
+<option value="">Select</option>
+<option value="small">Small</option>
+<option value="medium">Medium</option>
+<option value="large">Large</option>
+</select>
+
+<label>Service</label>
+<select id="serviceType" onchange="updatePrice()">
+<option value="">Select</option>
+<option value="outside">Outside Only</option>
+<option value="full">Inside & Out</option>
+</select>
+
+<div class="price" id="priceDisplay">Price: £0</div>
+
+<h3>Select Time</h3>
+<div id="calendar" class="grid"></div>
+
+<button onclick="bookWash()">Book & Pay</button>
+
+</div>
+
+<script>
+
+const STORAGE_KEY="carwashBookings";
+
+/* PASTE YOUR GOOGLE APPS SCRIPT WEBHOOK URL BELOW */
+const SHEETS_WEBHOOK="PASTE_GOOGLE_SCRIPT_URL_HERE";
+
+const prices={
+small:{outside:20,full:30},
+medium:{outside:25,full:35},
+large:{outside:30,full:40}
+};
+
+const durations={
+small:{outside:30,full:45},
+medium:{outside:30,full:60},
+large:{outside:45,full:70}
+};
+
+const paymentLinks={
+small:{outside:"https://square.link/u/x7KmsLrd",full:"PASTE_LINK"},
+medium:{outside:"PASTE_LINK",full:"PASTE_LINK"},
+large:{outside:"PASTE_LINK",full:"PASTE_LINK"}
+};
+
+let selectedStart=null;
+
+function getBookings(){
+return JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]");
+}
+
+function saveBookings(b){
+localStorage.setItem(STORAGE_KEY,JSON.stringify(b));
+}
+
+function formatTime(min){
+let h=Math.floor(min/60);
+let m=min%60;
+return (h+"").padStart(2,'0')+":"+(m+"").padStart(2,'0');
+}
+
+function updatePrice(){
+let size=document.getElementById("carSize").value;
+let service=document.getElementById("serviceType").value;
+
+if(size&&service){
+let p=prices[size][service];
+
+document.getElementById("priceDisplay").innerText="Price: £"+p;
+}
+}
+
+function generateCalendar(){
+let container=document.getElementById("calendar");
+container.innerHTML="";
+
+let bookings=getBookings();
+
+let start=9*60+30;
+let end=16*60;
+
+for(let t=start;t<=end;t+=15){
+let div=document.createElement("div");
+
+div.className="slot";
+
+div.dataset.time=t;
+
+div.innerText=formatTime(t);
+
+for(let b of bookings){
+if(t>=b.start && t<b.end){
+div.classList.add("booked");
+}
+}
+
+if(!div.classList.contains("booked")){
+div.onclick=function(){
+
+document.querySelectorAll('.slot').forEach(s=>s.classList.remove('selected'));
+
+div.classList.add('selected');
+
+selectedStart=parseInt(div.dataset.time);
+
+}
+}
+
+container.appendChild(div);
+}
+}
+
+async function sendToSheets(data){
+
+if(SHEETS_WEBHOOK==="https://script.google.com/macros/s/AKfycbz3Xvf9GnRwYAZuEC24YGT9o7iuSzxhSepY9sxdT3WCrKGnBzSAFXr-sIZm_HQqG0VYlw/exec"){
+return;
+}
+
+try{
+await fetch(SHEETS_WEBHOOK,{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify(data)
+});
+}catch(e){
+console.log("Sheets error",e);
+}
+
+}
+
+function bookWash(){
+
+let name=document.getElementById("name").value;
+let email=document.getElementById("email").value;
+let size=document.getElementById("carSize").value;
+let service=document.getElementById("serviceType").value;
+
+if(!name||!email||!size||!service||selectedStart===null){
+alert("Fill all fields and select time");
+return;
+}
+
+let duration=durations[size][service];
+
+let end=selectedStart+duration;
+
+let bookings=getBookings();
+
+for(let b of bookings){
+
+if(!(end<=b.start||selectedStart>=b.end)){
+alert("Time overlaps another booking");
+return;
+}
+
+}
+
+let booking={
+name:name,
+email:email,
+size:size,
+service:service,
+start:formatTime(selectedStart),
+end:formatTime(end),
+price:prices[size][service]
+};
+
+bookings.push({start:selectedStart,end:end});
+
+saveBookings(bookings);
+
+sendToSheets(booking);
+
+let link=paymentLinks[size][service];
+
+window.location.href=link;
+
+}
+
+generateCalendar();
+
+</script>
+
+</body>
+</html>
