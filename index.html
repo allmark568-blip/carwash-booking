@@ -165,3 +165,41 @@ form.addEventListener("submit", async (e)=>{
 
 </body>
 </html>
+<script>
+
+function goToPayment() {
+
+let size = document.getElementById("carSize").value;
+let service = document.getElementById("serviceType").value;
+
+let paymentLink = "";
+
+if(size === "small" && service === "outside"){
+paymentLink = "https://square.link/u/x7KmsLrd";
+}
+
+if(size === "small" && service === "full"){
+paymentLink = "https://square.link/u/mXEVFXYH";
+}
+
+if(size === "medium" && service === "outside"){
+paymentLink = "https://square.link/u/I1GpCaHr";
+}
+
+if(size === "medium" && service === "full"){
+paymentLink = "https://square.link/u/DTNlygZk";
+}
+
+if(size === "large" && service === "outside"){
+paymentLink = "https://square.link/u/atsXI2i7";
+}
+
+if(size === "large" && service === "full"){
+paymentLink = "https://square.link/u/CQDQKqMx";
+}
+
+window.location.href = paymentLink;
+
+}
+
+</script>
