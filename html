@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Mobile Car Wash Booking</title>
+
+<style>
+body{
+font-family: Arial;
+background:#f4f4f4;
+padding:40px;
+}
+
+.container{
+max-width:500px;
+margin:auto;
+background:white;
+padding:30px;
+border-radius:10px;
+box-shadow:0 5px 20px rgba(0,0,0,0.1);
+}
+
+h1{
+text-align:center;
+}
+
+select, input, button{
+width:100%;
+padding:12px;
+margin-top:10px;
+font-size:16px;
+}
+
+button{
+background:#000;
+color:white;
+border:none;
+cursor:pointer;
+}
+
+.price{
+font-size:22px;
+margin-top:15px;
+font-weight:bold;
+text-align:center;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Book Car Wash</h1>
+
+<label>Name</label>
+<input type="text" placeholder="Your Name">
+
+<label>Car Size</label>
+<select id="carSize" onchange="updatePrice()">
+<option value="">Select</option>
+<option value="small">Small</option>
+<option value="medium">Medium</option>
+<option value="large">Large</option>
+</select>
+
+<label>Service</label>
+<select id="serviceType" onchange="updatePrice()">
+<option value="">Select</option>
+<option value="outside">Outside Only</option>
+<option value="full">Inside & Out</option>
+</select>
+
+<div class="price" id="priceDisplay">Price: £0</div>
+
+<button onclick="goToPayment()">Book & Pay</button>
+
+</div>
+
+<script>
+
+/* -------- PRICES -------- */
+
+const prices = {
+
+small:{
+outside:20,
+full:30
+},
+
+medium:{
+outside:25,
+full:35
+},
+
+large:{
+outside:30,
+full:40
+}
+
+};
+
+
+/* -------- PAYMENT LINKS -------- */
+/* Replace each link with your Square payment link */
+
+const paymentLinks = {
+
+small:{
+outside:"https://square.link/u/mXEVFXYH",
+full:"https://square.link/u/x7KmsLrd"
+},
+
+medium:{
+outside:"https://square.link/u/I1GpCaHr",
+full:"https://square.link/u/DTNlygZk"
+},
+
+large:{
+outside:"https://square.link/u/atsXI2i7",
+full:"https://square.link/u/CQDQKqMx"
+}
+
+};
+
+
+/* -------- PRICE DISPLAY -------- */
+
+function updatePrice(){
+
+let size = document.getElementById("carSize").value;
+let service = document.getElementById("serviceType").value;
+
+if(size && service){
+
+let price = prices[size][service];
+document.getElementById("priceDisplay").innerHTML = "Price: £" + price;
+
+}
+
+}
+
+
+/* -------- PAYMENT REDIRECT -------- */
+
+function goToPayment(){
+
+let size = document.getElementById("carSize").value;
+let service = document.getElementById("serviceType").value;
+
+if(!size || !service){
+
+alert("Please select car size and service");
+return;
+
+}
+
+let link = paymentLinks[size][service];
+
+window.location.href = link;
+
+}
+
+</script>
+
+</body>
+</html>
